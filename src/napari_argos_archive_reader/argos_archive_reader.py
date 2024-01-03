@@ -87,7 +87,7 @@ def read_descriptor_yml(zip_path: zipfile.Path) -> dict:
     return yaml.load(yaml_text)
 
 
-def parse_layer_dict(ld, archive_file: Path | str):
+def parse_layer_dict(ld, archive_file: typing.Union[Path, str]):
     assert ld["axes"][0] == "AxesXY", "Only AxesXY supported!"
     axes_xy_dict = ld["axes"][1]
     axes_xy = (
@@ -112,7 +112,7 @@ def parse_layer_dict(ld, archive_file: Path | str):
     )
 
 
-def parse_archive_descriptor_dict(descriptor: dict, archive_file: Path | str) -> list[ArchiveLayer]:
+def parse_archive_descriptor_dict(descriptor: dict, archive_file: typing.Union[Path, str]) -> list[ArchiveLayer]:
     layer_dictionaries = descriptor["ArgosArchiveSource"]["layers"]
     return [parse_layer_dict(layer_dict, archive_file) for layer_dict in layer_dictionaries]
 
@@ -137,7 +137,7 @@ def layers_to_dask_array(layers: typing.Sequence[ArchiveLayer]):
 
 
 def read_group(
-    grouping_key, layers: typing.Sequence[ArchiveLayer], argos_archive_file: Path | str
+    grouping_key, layers: typing.Sequence[ArchiveLayer], argos_archive_file: typing.Union[Path, str]
 ) -> StackInfo:
     """Reads a sequence of ARGOS layers and returns a NapariStackInfo object
 
@@ -192,7 +192,7 @@ def read_group(
     )
 
 
-def read_argos_archive(archive_file: Path | str):
+def read_argos_archive(archive_file: typing.Union[Path, str]):
     zip_path = zipfile.Path(archive_file)
 
     descriptor = read_descriptor_yml(zip_path)
