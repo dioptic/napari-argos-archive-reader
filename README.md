@@ -11,7 +11,7 @@ A plugin to read Dioptic ARGOS archive files
 
 ----------------------------------
 
-This branch contains a reader plugin for DIOPTIC Argos Archive files, which
+This branch contains a reader plugin for [DIOPTIC ARGOS](https://www.dioptic.de/en/argos-en/) Archive files, which
 have `.zip` file extension.
 Individual ARGOS layers are grouped into napari layer with stacks according to
 their illumination, stage XY position and Z-stack information.
@@ -21,6 +21,8 @@ see the contents even for large archives with many layers. Note!: switching to
 volume rendering or swapping axes can trigger the loading of all ARGOS layers, which
 can take a long time for large archives.
 
+[ARGOS](https://www.dioptic.de/en/argos-en/) is an automated system
+for surface inspection according to ISO 10110-7.
 <!--
 Don't miss the full getting started guide to set up your new package:
 https://github.com/napari/cookiecutter-napari-plugin#getting-started
