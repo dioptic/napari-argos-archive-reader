@@ -65,7 +65,7 @@ class StackInfo:
     we need to create a LayerDataTuple for napari
     """
 
-    stack: da.Array | np.ndarray
+    stack: typing.Union[da.Array,np.ndarray]
     name: typing.Optional[str] = None
     translate: typing.Optional[typing.Sequence[float]] = None
     scale: typing.Optional[typing.Sequence[float]] = None
