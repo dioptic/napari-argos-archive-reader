@@ -6,4 +6,12 @@ If you need some help writing a good description, check out our
 [guide](https://github.com/chanzuckerberg/napari-hub/wiki/Writing-the-Perfect-Description-for-your-Plugin)
 -->
 
-The developer has not yet provided a napari-hub specific description.
+## DIOPTIC ARGOS archive reader
+
+This plugin adds a reader plugin to napari that enables reading of image data from
+[DIOPTIC ARGOS](https://www.dioptic.de/en/argos-en/) Archive files in `.zip` format.
+
+## Target audience
+
+Users who have a DIOPTIC ARGOS matrix inspection unit and want to review their
+acquisitions interactively or on a PC that does not have the ARGOS software installed.

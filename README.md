@@ -11,7 +11,7 @@ A plugin to read Dioptic ARGOS archive files
 
 ----------------------------------
 
-This branch contains a reader plugin for [DIOPTIC ARGOS](https://www.dioptic.de/en/argos-en/) Archive files, which
+This repo contains a reader plugin for [DIOPTIC ARGOS](https://www.dioptic.de/en/argos-en/) Archive files, which
 have `.zip` file extension.
 Individual ARGOS layers are grouped into napari layer with stacks according to
 their illumination, stage XY position and Z-stack information.
@@ -46,15 +46,5 @@ To install latest development version :
 Distributed under the terms of the [MIT] license,
 "napari-argos-archive-reader" is free and open source software
 
-[napari]: https://github.com/napari/napari
-[Cookiecutter]: https://github.com/audreyr/cookiecutter
-[@napari]: https://github.com/napari
 [MIT]: http://opensource.org/licenses/MIT
-
-
-[file an issue]: https://github.com/dioptic/napari-argos-archive-reader/issues
-
-[napari]: https://github.com/napari/napari
-[tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
-[PyPI]: https://pypi.org/
