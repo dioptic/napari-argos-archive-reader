@@ -3,6 +3,8 @@ Napari reader plugin for DIOPTIC Argos Archives
 
 Uses lazy loading using dask.
 """
+from __future__ import annotations
+
 import typing
 from pathlib import Path
 
