@@ -1,18 +1,14 @@
 name: napari-argos-archive-reader
-display_name: Napari ARGOS Archive Reader
+display_name: Dioptic ARGOS Archive Reader
 # use 'hidden' to remove plugin from napari hub search results
 visibility: public
-# see https://napari.org/stable/plugins/manifest.html for valid categories
-categories: ["Annotation", "Segmentation", "Acquisition"]
 contributions:
   commands:
     - id: napari-argos-archive-reader.get_reader
       python_name: napari_argos_archive_reader._reader:napari_get_reader
-      title: Open data with Napari ARGOS Archive Reader
-    - id: napari-argos-archive-reader.make_qwidget
-      python_name: napari_argos_archive_reader:ExampleQWidget
-      title: Make example QWidget
+      title: Open data with ARGOS Archive Reader
   readers:
     - command: napari-argos-archive-reader.get_reader
       accepts_directories: false
-      filename_patterns: ['*.npy']
+      filename_patterns: ['*.zip']
+

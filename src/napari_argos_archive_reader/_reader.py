@@ -1,11 +1,17 @@
 """
-This module is an example of a barebones numpy reader plugin for napari.
+Napari reader plugin for DIOPTIC Argos Archives
 
-It implements the Reader specification, but your plugin may choose to
-implement multiple readers or even other plugin contributions. see:
-https://napari.org/stable/plugins/guides.html?#readers
+Uses lazy loading using dask.
 """
-import numpy as np
+import typing
+from pathlib import Path
+
+from napari.types import LayerDataTuple
+
+from napari_argos_archive_reader.argos_archive_reader import (
+    StackInfo,
+    read_argos_archive,
+)
 
 
 def napari_get_reader(path):
@@ -23,13 +29,10 @@ def napari_get_reader(path):
         same path or list of paths, and returns a list of layer data tuples.
     """
     if isinstance(path, list):
-        # reader plugins may be handed single path, or a list of paths.
-        # if it is a list, it is assumed to be an image stack...
-        # so we are only going to look at the first file.
         path = path[0]
 
     # if we know we cannot read the file, we immediately return None.
-    if not path.endswith(".npy"):
+    if not path.endswith(".zip"):
         return None
 
     # otherwise we return the *function* that can read ``path``.
@@ -59,14 +62,44 @@ def reader_function(path):
         default to layer_type=="image" if not provided
     """
     # handle both a string and a list of strings
-    paths = [path] if isinstance(path, str) else path
-    # load all files into array
-    arrays = [np.load(_path) for _path in paths]
-    # stack arrays into single array
-    data = np.squeeze(np.stack(arrays))
+    path = Path(path) if isinstance(path, str) else Path(path[0])
+    print(f"Reading {path} using ARGOS Reader")
 
-    # optional kwargs for the corresponding viewer.add_* method
-    add_kwargs = {}
+    if path.suffix.lower() != ".zip":
+        raise ValueError("Expected .zip suffix for ARGOS archive source.")
 
-    layer_type = "image"  # optional, default is "image"
-    return [(data, add_kwargs, layer_type)]
+    napari_stacks = read_argos_archive(path)
+
+    def _napari_stack_info_to_layer_tuple(
+        napari_stack_info: StackInfo,
+    ) -> LayerDataTuple:
+        """Generate a LayerDataTuple from StackInfo"""
+        # TODO: turn this into a method of StackInfo ?
+        layer_type = "image"
+        add_kwargs: dict[str, typing.Any] = {}
+        if napari_stack_info.name is not None:
+            add_kwargs[
+                "name"
+            ] = napari_stack_info.name  # TODO: we pass the name, and it makes
+            # it into the LayerDataTuple, but napari still doesn't name the file correctly.
+            # This seems to be a bug in napari
+        if napari_stack_info.translate is not None:
+            add_kwargs["translate"] = napari_stack_info.translate
+        if napari_stack_info.scale is not None:
+            add_kwargs["scale"] = napari_stack_info.scale
+        if napari_stack_info.metadata is not None:
+            add_kwargs["metadata"] = napari_stack_info.metadata
+        else:
+            add_kwargs["metadata"] = {}
+        if napari_stack_info.argos_archive_file is not None:
+            add_kwargs["metadata"][
+                "argos_archive_file"
+            ] = napari_stack_info.argos_archive_file
+        return (napari_stack_info.stack, add_kwargs, layer_type)
+
+    napari_layer_tuples = [
+        _napari_stack_info_to_layer_tuple(napari_stack_info)
+        for napari_stack_info in napari_stacks
+    ]
+
+    return napari_layer_tuples
