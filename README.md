@@ -11,7 +11,15 @@ A plugin to read Dioptic ARGOS archive files
 
 ----------------------------------
 
-This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
+This branch contains a reader plugin for DIOPTIC Argos Archive files, which
+have `.zip` file extension.
+Individual ARGOS layers are grouped into napari layer with stacks according to
+their illumination, stage XY position and Z-stack information.
+
+The plugin implements delayed reading using `dask.delayed` so that one can quickly
+see the contents even for large archives with many layers. Note!: switching to
+volume rendering or swapping axes can trigger the loading of all ARGOS layers, which
+can take a long time for large archives.
 
 <!--
 Don't miss the full getting started guide to set up your new package:
@@ -27,37 +35,20 @@ You can install `napari-argos-archive-reader` via [pip]:
 
     pip install napari-argos-archive-reader
 
-
-
 To install latest development version :
 
     pip install git+https://github.com/dioptic/napari-argos-archive-reader.git
-
-
-## Contributing
-
-Contributions are very welcome. Tests can be run with [tox], please ensure
-the coverage at least stays the same before you submit a pull request.
 
 ## License
 
 Distributed under the terms of the [MIT] license,
 "napari-argos-archive-reader" is free and open source software
 
-## Issues
-
-If you encounter any problems, please [file an issue] along with a detailed description.
-
 [napari]: https://github.com/napari/napari
 [Cookiecutter]: https://github.com/audreyr/cookiecutter
 [@napari]: https://github.com/napari
 [MIT]: http://opensource.org/licenses/MIT
-[BSD-3]: http://opensource.org/licenses/BSD-3-Clause
-[GNU GPL v3.0]: http://www.gnu.org/licenses/gpl-3.0.txt
-[GNU LGPL v3.0]: http://www.gnu.org/licenses/lgpl-3.0.txt
-[Apache Software License 2.0]: http://www.apache.org/licenses/LICENSE-2.0
-[Mozilla Public License 2.0]: https://www.mozilla.org/media/MPL/2.0/index.txt
-[cookiecutter-napari-plugin]: https://github.com/napari/cookiecutter-napari-plugin
+
 
 [file an issue]: https://github.com/dioptic/napari-argos-archive-reader/issues
 
