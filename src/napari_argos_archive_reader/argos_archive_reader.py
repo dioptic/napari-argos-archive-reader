@@ -52,9 +52,12 @@ class ArchiveLayer(BaseModel):
     """
 
     archive_file: str  #: Path to the .zip file that is the ARGOS image archive
-    image: str  # file name of the image corresponding to this layer
+    image: str  #: file name of the image corresponding to this layer
     axes_xy: AxesXY
     z: float = 0.0
+    binary: typing.Optional[
+        str
+    ] = None  #: file name of the binary segementation mask for this layer
     mask_geometry: typing.Optional[typing.Any] = None
     z_stack: typing.Optional[tuple[float, ...]] = None
     illumination_metadata: typing.Optional[MatrixIlluminationMetadata] = None
@@ -67,7 +70,8 @@ class StackInfo:
     we need to create a LayerDataTuple for napari
     """
 
-    stack: typing.Union[da.Array,np.ndarray]
+    stack: typing.Union[da.Array, np.ndarray]
+    segmentation: typing.Optional[typing.Union[da.Array, np.ndarray]] = None
     name: typing.Optional[str] = None
     translate: typing.Optional[typing.Sequence[float]] = None
     scale: typing.Optional[typing.Sequence[float]] = None
@@ -75,9 +79,15 @@ class StackInfo:
     metadata: typing.Optional[dict[str, typing.Any]] = None
 
 
-def image_for_layer(layer: ArchiveLayer, reader: typing.Callable = imread):
+def image_for_layer(
+    layer: ArchiveLayer,
+    reader: typing.Callable = imread,
+    segmentation: bool = False,
+):
     zip_path = zipfile.Path(layer.archive_file)
-    image_file_in_zip = zip_path / layer.image
+    image_file_in_zip = (
+        (zip_path / layer.binary) if segmentation and layer.binary else (zip_path / layer.image)
+    )
     return reader(io.BytesIO(image_file_in_zip.read_bytes()))
 
 
@@ -108,18 +118,21 @@ def parse_layer_dict(ld, archive_file: typing.Union[Path, str]):
         image=ld["image"],
         axes_xy=axes_xy,
         mask_geometry=mask_geometry,
+        binary=ld.get("binary", None),
         z=ld["z"],
         z_stack=z_stack,
         illumination_metadata=illumination,
     )
 
 
-def parse_archive_descriptor_dict(descriptor: dict, archive_file: typing.Union[Path, str]) -> list[ArchiveLayer]:
+def parse_archive_descriptor_dict(
+    descriptor: dict, archive_file: typing.Union[Path, str]
+) -> list[ArchiveLayer]:
     layer_dictionaries = descriptor["ArgosArchiveSource"]["layers"]
     return [parse_layer_dict(layer_dict, archive_file) for layer_dict in layer_dictionaries]
 
 
-def layers_to_dask_array(layers: typing.Sequence[ArchiveLayer]):
+def layers_to_dask_array(layers: typing.Sequence[ArchiveLayer], segmentation: bool = False):
     assert len(layers), "Need at least one layer!"
     layer_shape = layers[0].axes_xy.shape
     # assert all layer shapes are the same
@@ -131,7 +144,9 @@ def layers_to_dask_array(layers: typing.Sequence[ArchiveLayer]):
     return da.stack(
         [
             da.from_delayed(
-                delayed(image_for_layer(layer, reader=imread)), shape=layer_shape, dtype=layer_dtype
+                delayed(image_for_layer(layer, reader=imread, segmentation=segmentation)),
+                shape=layer_shape,
+                dtype=layer_dtype,
             )
             for layer in layers
         ],
@@ -139,7 +154,9 @@ def layers_to_dask_array(layers: typing.Sequence[ArchiveLayer]):
 
 
 def read_group(
-    grouping_key, layers: typing.Sequence[ArchiveLayer], argos_archive_file: typing.Union[Path, str]
+    grouping_key,
+    layers: typing.Sequence[ArchiveLayer],
+    argos_archive_file: typing.Union[Path, str],
 ) -> StackInfo:
     """Reads a sequence of ARGOS layers and returns a NapariStackInfo object
 
@@ -166,6 +183,11 @@ def read_group(
 
     stack = layers_to_dask_array(layers)
 
+    if layers[0].binary is not None:
+        segmentation = layers_to_dask_array(layers, segmentation=True)
+    else:
+        segmentation = None
+
     translate_um = [0.0, 0.0, 0.0]
     scale_um = [1.0, 1.0, 1.0]
 
@@ -186,6 +208,7 @@ def read_group(
 
     return StackInfo(
         stack=stack,
+        segmentation=segmentation,
         translate=translate_um,
         scale=scale_um,
         argos_archive_file=str(argos_archive_file),
@@ -204,13 +227,22 @@ def read_argos_archive(archive_file: typing.Union[Path, str]):
         list(
             groupby(
                 archive_layers,
-                lambda layer: (layer.axes_xy, layer.illumination_metadata, layer.z_stack),
+                lambda layer: (
+                    layer.axes_xy,
+                    layer.illumination_metadata,
+                    layer.z_stack,
+                ),
             )
         )
     )
     print(f"Grouping ARGOS layers yields {nr_stacks} stacks to load as napari layers.")
     grouped = groupby(
-        archive_layers, lambda layer: (layer.axes_xy, layer.illumination_metadata, layer.z_stack)
+        archive_layers,
+        lambda layer: (
+            layer.axes_xy,
+            layer.illumination_metadata,
+            layer.z_stack,
+        ),
     )
 
     return [

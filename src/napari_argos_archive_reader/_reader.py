@@ -74,15 +74,13 @@ def reader_function(path):
 
     def _napari_stack_info_to_layer_tuple(
         napari_stack_info: StackInfo,
-    ) -> LayerDataTuple:
+    ) -> typing.List[LayerDataTuple]:
         """Generate a LayerDataTuple from StackInfo"""
         # TODO: turn this into a method of StackInfo ?
         layer_type = "image"
         add_kwargs: dict[str, typing.Any] = {}
         if napari_stack_info.name is not None:
-            add_kwargs[
-                "name"
-            ] = napari_stack_info.name  # TODO: we pass the name, and it makes
+            add_kwargs["name"] = napari_stack_info.name  # TODO: we pass the name, and it makes
             # it into the LayerDataTuple, but napari still doesn't name the file correctly.
             # This seems to be a bug in napari
         if napari_stack_info.translate is not None:
@@ -94,14 +92,19 @@ def reader_function(path):
         else:
             add_kwargs["metadata"] = {}
         if napari_stack_info.argos_archive_file is not None:
-            add_kwargs["metadata"][
-                "argos_archive_file"
-            ] = napari_stack_info.argos_archive_file
-        return (napari_stack_info.stack, add_kwargs, layer_type)
+            add_kwargs["metadata"]["argos_archive_file"] = napari_stack_info.argos_archive_file
+        layer_data_tuples = [(napari_stack_info.stack, add_kwargs, layer_type)]
+        if napari_stack_info.segmentation is not None:
+            # ARGOS segmentation images are not labels, but multiple binary masks stuffed
+            # into a byte array.
+            # Each bit in the segmentation image is a flag for a certain defect class.
+            # For now, we simply add this as a labels layer, which will result in different
+            # defect types being displayed in different colors.
+            layer_data_tuples.append((napari_stack_info.segmentation, add_kwargs, "labels"))
+        return layer_data_tuples
 
-    napari_layer_tuples = [
-        _napari_stack_info_to_layer_tuple(napari_stack_info)
-        for napari_stack_info in napari_stacks
-    ]
+    napari_layer_tuples = []
+    for napari_stack_info in napari_stacks:
+        napari_layer_tuples += _napari_stack_info_to_layer_tuple(napari_stack_info)
 
     return napari_layer_tuples
