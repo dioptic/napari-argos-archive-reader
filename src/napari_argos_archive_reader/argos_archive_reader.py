@@ -217,10 +217,49 @@ def read_group(
     )
 
 
-def read_argos_archive(archive_file: typing.Union[Path, str]):
+def read_argos_archive(archive_file: typing.Union[Path, str]) -> typing.List[StackInfo]:
     zip_path = zipfile.Path(archive_file)
 
     descriptor = read_descriptor_yml(zip_path)
+
+    version = descriptor["ArgosArchiveSource"].get("version", 1)
+
+    if version == 1:
+        return _read_argos_archive_v1(archive_file, descriptor)
+    elif version == 2:
+        return _read_argos_archive_v2(archive_file, descriptor)
+    raise RuntimeError(f"Unsupported ARGOS archive version {version}.")
+
+
+def _read_argos_archive_v1(
+    archive_file: typing.Union[Path, str], descriptor: dict, reader: typing.Callable = imread
+) -> typing.List[StackInfo]:
+    """Minimal support for v1 (non-matrix) files. Simply stack all image files
+    in zip folder without much metadata. No scaling, no polar unwrap etc."""
+    # skimage delegates .png reading to PIL and PIL's default settings
+    # suspect a decompression bomb for large ARGOS line scan images!
+    # Increase the PIL threshold for decompression bomb prevention.
+    # see https://github.com/napari/napari/issues/652#issuecomment-549192671
+    from PIL import Image  # type: ignore
+
+    Image.MAX_IMAGE_PIXELS = 10000000000
+    zip_path = zipfile.Path(archive_file)
+    zipped_files = list(zip_path.iterdir())
+    image_files = list(
+        filter(lambda f: f.suffix.lower() in (".tif", ".png", ".bmp", ".jpg"), zipped_files)
+    )
+    sorted_image_files = sorted(image_files, key=lambda p: p.name)
+    if not len(sorted_image_files):
+        return []
+    stack = np.stack(
+        [reader(io.BytesIO(image_file.read_bytes())) for image_file in sorted_image_files]
+    )
+    return [StackInfo(stack=stack, argos_archive_file=str(archive_file))]
+
+
+def _read_argos_archive_v2(
+    archive_file: typing.Union[Path, str], descriptor: dict
+) -> typing.List[StackInfo]:
     archive_layers = parse_archive_descriptor_dict(descriptor, archive_file=archive_file)
 
     nr_stacks = len(

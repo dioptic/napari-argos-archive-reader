@@ -23,6 +23,27 @@ can take a long time for large archives.
 
 [ARGOS](https://www.dioptic.de/en/argos-en/) is an automated system
 for surface inspection according to ISO 10110-7.
+
+This plugin is still experimental and does not support all features of ARGOS archives.
+
+Currently, the plugin
+
+* can read Argos matrix archives containing regular image layers including:
+  * ✅ segmentation masks
+  * ✅ Z-stack metadata
+  * ✅ Illumination metadata
+  * ✅ proper scaling and affine transformation of layers
+* can read ❔✅ Argos line scan (polar) archives with minimal support (no metadata parsing)
+This has not been tested on many archives.
+
+Not supported are:
+
+* ❌ annotated archives
+* ❌ pyramid image structures
+* ❌ Line segmentation metadata
+* ❌ color metadata
+* ❌ ...
+
 <!--
 Don't miss the full getting started guide to set up your new package:
 https://github.com/napari/cookiecutter-napari-plugin#getting-started
@@ -32,6 +53,10 @@ https://napari.org/stable/plugins/index.html
 -->
 
 ## Installation
+
+If you have napari installed you can install the plugin from the napari hub through the `Plugins -> Plugin Manger` menu
+entry. After waiting a short while for napari to retrieve the plugins available from the hub, simply enter "argos" in
+the filter line entry field at the top to narrow down the plugin list and click install.
 
 You can install `napari-argos-archive-reader` via [pip]:
 
