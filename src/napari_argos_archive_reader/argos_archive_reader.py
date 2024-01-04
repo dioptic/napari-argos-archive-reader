@@ -246,7 +246,7 @@ def _read_argos_archive_v1(
     zip_path = zipfile.Path(archive_file)
     zipped_files = list(zip_path.iterdir())
     image_files = list(
-        filter(lambda f: f.suffix.lower() in (".tif", ".png", ".bmp", ".jpg"), zipped_files)
+        filter(lambda f: Path(f.name).suffix.lower() in (".tif", ".png", ".bmp", ".jpg"), zipped_files)
     )
     sorted_image_files = sorted(image_files, key=lambda p: p.name)
     if not len(sorted_image_files):
