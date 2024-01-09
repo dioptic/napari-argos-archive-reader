@@ -44,13 +44,26 @@ Not supported are:
 * ❌ color metadata
 * ❌ ...
 
-<!--
-Don't miss the full getting started guide to set up your new package:
-https://github.com/napari/cookiecutter-napari-plugin#getting-started
+## Usage
 
-and review the napari docs for plugin developers:
-https://napari.org/stable/plugins/index.html
--->
+### Opening files
+
+Simply drag and drop an ARGOS Archive `.zip` file onto the napari canvas or use `File->Open` to open it.
+
+### Synchronizing contrast limits
+
+By default, after reading an archive, each napari layer will have their own contrast limits, so you can
+adjust these contrast limits individually.
+
+The reader plugin registers a custom key binding after reading an ARGOS archive. Pressing the `s` key will allow
+you to synchronize the contrast limits for a set of layers:
+
+* If you select _a single_ napari layer corresponding to an image/stack from an ARGOS archive, all napari image
+layers that were loaded from this archive now have their contrast limits synchronized, i.e. changing the
+contrast limits of _any_ of them will adjust the contrast limits of _all_ of the layers belonging to the same
+archive.
+* If you select _multiple_ napari layers and press `s` all of these and only these napari layers will have
+their contrast limits synchronized, regardless of whether they belong to the same ARGOS archive or not.
 
 ## Installation
 
