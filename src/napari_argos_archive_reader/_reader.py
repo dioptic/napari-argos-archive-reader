@@ -8,12 +8,15 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
+from napari import current_viewer
 from napari.types import LayerDataTuple
 
 from napari_argos_archive_reader.argos_archive_reader import (
     StackInfo,
     read_argos_archive,
 )
+
+from .synchronize import activate_synchronization
 
 
 def napari_get_reader(path):
@@ -106,5 +109,9 @@ def reader_function(path):
     napari_layer_tuples = []
     for napari_stack_info in napari_stacks:
         napari_layer_tuples += _napari_stack_info_to_layer_tuple(napari_stack_info)
+
+    viewer = current_viewer()
+    viewer.bind_key("s", activate_synchronization, overwrite=True)
+    print("Registering keybinding: Press `s` for layer synchronization")
 
     return napari_layer_tuples

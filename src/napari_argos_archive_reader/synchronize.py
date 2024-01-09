@@ -49,12 +49,26 @@ def adjust_contrast_callback(event, layer_group: typing.Tuple[Layer]):
     _updating[layer_group] = False
 
 
-def synchronize_layer(layer: Layer, viewer: Viewer):
+def synchronize_argos_layer(layer: Layer, viewer: Viewer):
     if not is_argos_layer(layer):
         return
     # TODO assert image layer
     layer_group = tuple(find_layers_for_archive(layer.metadata[ARGOS_ARCHIVE_KEY], viewer=viewer))
+    print(
+        f"Synchronizing contrast limits in layers for ARGOS archive: {layer.metadata[ARGOS_ARCHIVE_KEY]}"
+    )
     callback = partial(adjust_contrast_callback, layer_group=layer_group)
     for layer in layer_group:
-        print(f"registering {layer.name}")
         layer.events.contrast_limits.connect(callback)
+
+
+def activate_synchronization(viewer: Viewer):
+    sel = viewer.layers.selection
+    if len(sel) == 1 and is_argos_layer(layer := list(sel)[0]):
+        synchronize_argos_layer(layer, viewer)
+    elif len(sel) > 1:
+        layer_group = tuple(sel)
+        print(f"Synchronizing contrast_limits for layers {[layer.name for layer in layer_group]}")
+        callback = partial(adjust_contrast_callback, layer_group=layer_group)
+        for layer in layer_group:
+            layer.events.contrast_limits.connect(callback)
