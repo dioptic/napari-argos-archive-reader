@@ -107,12 +107,16 @@ def parse_layer_dict(ld, archive_file: typing.Union[Path, str]):
     )
     mask_geometry = None  # TODO
     z_stack = ld.get("z_stack", None)
-    illumination_dict = ld["metadata"]["MatrixIlluminationMetadata"]
-    illumination = (
-        MatrixIlluminationMetadata.parse_obj(illumination_dict)
-        if LEGACY_PYDANTIC
-        else MatrixIlluminationMetadata.model_validate(illumination_dict)
-    )
+    metadata = ld.get("metadata", None)
+    illumination_dict = metadata.get("MatrixIlluminationMetadata", None)
+    if illumination_dict is None:
+        illumination = None
+    else:
+        illumination = (
+            MatrixIlluminationMetadata.parse_obj(illumination_dict)
+            if LEGACY_PYDANTIC
+            else MatrixIlluminationMetadata.model_validate(illumination_dict)
+        )
     return ArchiveLayer(
         archive_file=str(Path(archive_file)),
         image=ld["image"],
@@ -246,7 +250,9 @@ def _read_argos_archive_v1(
     zip_path = zipfile.Path(archive_file)
     zipped_files = list(zip_path.iterdir())
     image_files = list(
-        filter(lambda f: Path(f.name).suffix.lower() in (".tif", ".png", ".bmp", ".jpg"), zipped_files)
+        filter(
+            lambda f: Path(f.name).suffix.lower() in (".tif", ".png", ".bmp", ".jpg"), zipped_files
+        )
     )
     sorted_image_files = sorted(image_files, key=lambda p: p.name)
     if not len(sorted_image_files):
